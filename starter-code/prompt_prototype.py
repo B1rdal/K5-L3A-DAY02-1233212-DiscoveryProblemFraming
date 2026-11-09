@@ -8,8 +8,8 @@ from typing import Any
 from google import genai
 from google.genai import types
 
-# Standard Model Identifier
-GEMINI_MODEL = "gemini-2.5-flash"
+# Current stable Flash model. Gemini 2.5 Flash is unavailable to new API users.
+GEMINI_MODEL = "gemini-3.8-flash"
 
 # ===========================================================================
 # 🛡️ Operational Boundaries to Enforce via System Prompt:
@@ -69,8 +69,13 @@ def evaluate_prompt(user_input: str) -> str:
         contents=user_input,
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
-            temperature=0,
-            max_output_tokens=500,
+            # Gemini 3.8 counts reasoning against the output budget. Keep
+            # reasoning low for this deterministic boundary test and leave
+            # enough room for the complete tagged JSON response.
+            thinking_config=types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel.LOW,
+            ),
+            max_output_tokens=2048,
         ),
     )
     if not response.text:
@@ -171,7 +176,7 @@ if __name__ == "__main__":
         
     print("\033[94m==================================================")
     print("🚀 Vin Smart Future — Programmatic Boundary Stress-Testing")
-    print("Standard Model: Google Gemini 2.5 Flash")
+    print(f"Standard Model: Google {GEMINI_MODEL}")
     print("==================================================\033[0m\n")
     
     for i, test in enumerate(ADVERSARIAL_TESTS, start=1):
